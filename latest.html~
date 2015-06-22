@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+  		<title>Journal Home</title>
+		<link rel="stylesheet" href="style.css">
+ </head>
+ <body>
+	<div id="menu">
+		<ul>
+			<li><a href="index.html">Home</a></li>
+			<li class="selected"><a href="latest.html">View Latest Entry</a></li>
+			<li><a href="create.html">Create New Entry</a></li>
+		</ul>
+	</div>
+  
+	<div id="latest">
+			<h4>Date:</h4>
+			<p class="date">6/21</p> <br>
+			<h3>Subject:</h3>
+			<p class="subject">Test Subject</p> <br>	
+			<h3>Entry: </h3>		
+			<p class="entry">Let's Do This</p> <br>
+		<a href="edit.html">Edit Entry</a>
+		</ul>
+	</div>
+
+	
+ </body>
+</html>
