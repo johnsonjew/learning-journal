@@ -1,10 +1,16 @@
+Jinja2==2.7.3
+MarkupSafe==0.23
 PasteDeploy==1.5.2
 SQLAlchemy==1.0.5
 WebOb==1.4.1
 argparse==1.2.1
+ipython==3.2.0
 psycopg2==2.6.1
+py==1.4.29
 pyramid==1.5.7
+pyramid-jinja2==2.5
 pyramid-tm==0.12
+pytest==2.7.2
 repoze.lru==0.6
 transaction==1.4.4
 translationstring==1.3

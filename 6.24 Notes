@@ -1,0 +1,25 @@
+os.environ.get() :
+    Place important info in our OS environment.  Check for values in OS environment, puts it in there if it doesn't exist.
+    Contains same values as 'env' in linux.
+
+'@' is a decorative. Can potentially make a look-up function. When 'home' is every matched, "Hello World" is returned
+
+'look up what declarative_base() does'
+
+web framework
+    middleware is between server and application. Can do things like stick extra headers on there, cache information etc.
+
+    root factory is like the root of a file system. If nothing is passed, the default is given.
+
+Github
+    Sharing: Settings -> Collaborators. enter username and add collaborator
+    stash: git stash save new stuff
+             : git stash list
+
+Python
+    Use unicode, since we're straddling between strings and unicode. Python 3 defaults to unicode
+
+renderer - generates a response. If it's a string, will return string type; json will return json etc
+
+Jinja
+    Can make a jinja template, insert things into the jinja template and return it.
