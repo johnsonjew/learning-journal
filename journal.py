@@ -153,10 +153,7 @@ def do_login(request):
     return False
 
 
-
-
-
 if __name__ == '__main__':
     app = main()
-    port = os.environ.get('PORT', 5000)
+    port = os.environ.get('PORT', 7080)
     serve(app, host='0.0.0.0', port=port)
