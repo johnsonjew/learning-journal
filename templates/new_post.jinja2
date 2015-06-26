@@ -9,7 +9,7 @@
   </div>
   <div class="field">
     <label for="text">Text</label>
-    <textarea name="text" id="text" rows="5" cols="80"></textarea>
+    <textarea name="text" id="text" rows="25" cols="50"></textarea>
   </div>
   <div class="control_row">
     <input type="submit" value="Share" name="Share"/>
@@ -17,6 +17,7 @@
 </form>
 </aside>
 {% endif %}
+    <br><br><br><br>
     <h2>Entries</h2>
     {% for entry in entries %}
     <article class="entry" id="entry={{entryid}}">

@@ -1,23 +1,29 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from sqlalchemy.orm import scoped_session, sessionmaker
-from zope.sqlalchemy import ZopeTransactionExtension
 import os
-from pyramid.config import Configurator
-from pyramid.view import view_config
+import datetime
 from waitress import serve
 import sqlalchemy as sa
-from sqlalchemy.ext.declarative import declarative_base
-import datetime
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from zope.sqlalchemy import ZopeTransactionExtension
+from pyramid.config import Configurator
+from pyramid.view import view_config
+from pyramid.httpexceptions import HTTPFound
+from pyramid.authentication import AuthTktAuthenticationPolicy
+from pyramid.authorization import ACLAuthorizationPolicy
+from pyramid.security import remember, forget
+from cryptacular.bcrypt import BCRYPTPasswordManager
 
+HERE = os.path.dirname(os.path.abspath(__file__))
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
 
 class Entry(Base):
     __tablename__ = 'entries'
-
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     title = sa.Column(sa.Unicode(128), nullable=False)
     text = sa.Column(sa.UnicodeText, nullable=False)
@@ -38,9 +44,6 @@ class Entry(Base):
             session = DBSession
         return session.query(cls).order_by(cls.date.desc()).all()
 
-    def __repr__(self):
-        return "<Entry(title='%s', date='%s')>" % (
-            self.title, self.date)
 
 DATABASE_URL = os.environ.get(
     'DATABASE_URL',
@@ -59,9 +62,46 @@ def list_view(request):
     return {'entries': entries}
 
 
-# @view_config(route_name='home', renderer='string')
-# def home(request):
-#     return "Hello World"
+@view_config(route_name='add', request_method='POST')
+def add_entry(request):
+    title = request.params.get('title')
+    text = request.params.get('text')
+    Entry.write(title=title, text=text)
+    return HTTPFound(request.route_url('home'))
+
+
+@view_config(context=DBAPIError)
+def db_exception(context, request):
+    from pyramid.response import Response
+    response = Response(context.message)
+    response.status_int = 500
+    return response
+
+@view_config(route_name='login', renderer="templates/login.jinja2")
+def login(request):
+    """authenticate a user by username/password"""
+    username = request.params.get('username', '')
+    error = ''
+    if request.method == 'POST':
+        error = "Login Failed"
+        authenticated = False
+        try:
+            authenticated = do_login(request)
+        except ValueError as e:
+            error = str(e)
+
+        if authenticated:
+            headers = remember(request, username)
+            return HTTPFound(request.route_url('home'), headers=headers)
+
+    return {'error': error, 'username': username}
+
+
+@view_config(route_name='logout')
+def logout(request):
+    headers = forget(request)
+    return HTTPFound(request.route_url('home'), headers=headers)
+
 
 def main():
     """Create a configured wsgi app"""
@@ -69,20 +109,52 @@ def main():
     debug = os.environ.get('DEBUG', True)
     settings['reload_all'] = debug
     settings['debug_all'] = debug
+    settings['auth.username'] = os.environ.get('AUTH_USERNAME', 'admin')
+    manager = BCRYPTPasswordManager()
+    settings['auth.password'] = os.environ.get('AUTH_PASSWORD', manager.encode('secret')
+    )
     if not os.environ.get('TESTING', False):
         engine = sa.create_engine(DATABASE_URL)
         DBSession.configure(bind=engine)
+    auth_secret = os.environ.get('JOURNAL_AUTH_SECRET', 'itsaseekrit')
     # configuration setup
     config = Configurator(
-        settings=settings
-        )
+        settings=settings,
+        authentication_policy=AuthTktAuthenticationPolicy(
+            secret=auth_secret,
+            hashalg='sha512'
+        ),
+        authorization_policy=ACLAuthorizationPolicy(),
+    )
     config.include('pyramid_tm')
     config.include('pyramid_jinja2')
+    config.add_static_view('static', os.path.join(HERE, 'static'))
     config.add_route('home', '/')
-    config.add_route('other', '/other/{special_val}')
+    config.add_route('add', '/add')
+    config.add_route('login', '/login')
+    config.add_route('logout', '/logout')
     config.scan()
     app = config.make_wsgi_app()
     return app
+
+
+def do_login(request):
+    username = request.params.get('username', None)
+    password = request.params.get('password', None)
+    if not (username and password):
+        raise ValueError('both username and password are required')
+
+    settings = request.registry.settings
+    manager = BCRYPTPasswordManager()
+    if username == settings.get('auth.username', ''):
+        hashed = settings.get('auth.password', '')
+        return manager.check(hashed, password)
+
+    return False
+
+
+
+
 
 if __name__ == '__main__':
     app = main()
