@@ -62,6 +62,12 @@ def list_view(request):
     return {'entries': entries}
 
 
+@view_config(route_name='newpost', renderer='templates/newpost.jinja2')
+def new_post(request):
+    entries = Entry.all()
+    return {'entries': entries}
+
+
 @view_config(route_name='add', request_method='POST')
 def add_entry(request):
     title = request.params.get('title')
@@ -132,6 +138,7 @@ def main():
     config.add_route('home', '/')
     config.add_route('add', '/add')
     config.add_route('login', '/login')
+    config.add_route('newpost', '/newpost')
     config.add_route('logout', '/logout')
     config.scan()
     app = config.make_wsgi_app()
@@ -155,5 +162,5 @@ def do_login(request):
 
 if __name__ == '__main__':
     app = main()
-    port = os.environ.get('PORT', 7080)
+    port = os.environ.get('PORT', 7070)
     serve(app, host='0.0.0.0', port=port)
