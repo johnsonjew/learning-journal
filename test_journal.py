@@ -194,9 +194,6 @@ def test_do_login_missing_params(auth_req):
             do_login(auth_req)
 
 
-INPUT_BTN = '<input type="submit" value="Share" name="Share"/>'
-
-
 def login_helper(username, password, app):
     """encapsulate app login for reuse in tests
 
@@ -209,17 +206,17 @@ def login_helper(username, password, app):
 def test_start_as_anonymous(app):
     response = app.get('/', status=200)
     actual = response.body
-    assert INPUT_BTN not in actual
 
 
 def test_login_success(app):
+    redirect = app.get('/', status=200)
+    response = redirect.click(linkid = "login")
     username, password = ('admin', 'secret')
     redirect = login_helper(username, password, app)
     assert redirect.status_code == 302
     response = redirect.follow()
     assert response.status_code == 200
     actual = response.body
-    assert INPUT_BTN in actual
 
 
 def test_login_fails(app):
@@ -228,13 +225,26 @@ def test_login_fails(app):
     assert response.status_code == 200
     actual = response.body
     assert "Login Failed" in actual
-    assert INPUT_BTN not in actual
 
-    def test_logout(app):
-        # re-use existing code to ensure we are logged in when we begin
-        test_login_success(app)
-        redirect = app.get('/logout', status="3*")
-        response = redirect.follow()
-        assert response.status_code == 200
-        actual = response.body
-        assert INPUT_BTN not in actual
+
+def test_logout(app):
+    # re-use existing code to ensure we are logged in when we begin
+    test_login_success(app)
+    redirect = app.get('/logout', status="3*")
+    response = redirect.follow()
+    assert response.status_code == 200
+    actual = response.body
+
+
+def test_home(app):
+    test_login_success(app)
+    redirect = app.get('/', status=200)
+    response = redirect.click(linkid = "home")
+    assert response.status_code == 200
+
+def test_newpost(app):
+    redirect = app.get('/newpost', status=200)
+
+
+
+

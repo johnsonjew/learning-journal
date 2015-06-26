@@ -75,12 +75,16 @@ a {
     font-size: 20px;
 }
 
-.dateline, h2 {
+.dateline, .entry h3{
     margin: .5em;
 }
 
+.dateline {
+    float:right;
+}
 
-
-
+.error {
+    color:red;
+}
 
 

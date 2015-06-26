@@ -2,10 +2,10 @@
 {% block body %}
     <div id="menu">
         <ul>
-            <li class="selected"><a href="{{ request.route_url('home') }}">Home</a></li>
+            <li class="selected"><a id="home" href="{{ request.route_url('home') }}">Home</a></li>
             {% if not request.authenticated_userid %}
-            <li><a href="{{ request.route_url('login') }}">Create New Entry</a></li>
-            <li><a href="{{ request.route_url('login') }}">Log In</a></li>
+            <li><a id="newentry" href="{{ request.route_url('login') }}">Create New Entry</a></li>
+            <li><a id="login" href="{{ request.route_url('login') }}">Log In</a></li>
             {% else %}
             <li><a href="{{ request.route_url('newpost') }}">Create New Entry</a></li>
             <li><a href="{{ request.route_url('logout') }}">Log Out</a></li>
@@ -14,8 +14,8 @@
     </div>
     {% for entry in entries %}
     <article class="entry" id="entry={{entryid}}">
-        <h3>{{ entry.title }}</h3>
         <p class="dateline">{{ entry.date.strftime('%b. %d, %Y') }}</p>
+        <h3 class="title">Title: {{ entry.title }}</h3>
         <div class="entry_body">
             {{ entry.text|safe }}
         </div>
