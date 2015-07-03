@@ -17,8 +17,9 @@
         <p class="dateline">{{ entry.date.strftime('%b. %d, %Y') }}</p>
         <h3 class="title">Title: {{ entry.title }}</h3>
         <div class="entry_body">
-            {{ entry.text|safe }}
+            {{ entry.mark_down()|safe }}
         </div>
+        <div class="details"><a href="{{ request.route_url('details', id=entry.id) }}">Details</a></div>
     </article>
     {% else %}
     <div class="entry">

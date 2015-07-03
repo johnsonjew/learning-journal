@@ -38,6 +38,7 @@ def db_session(request, connection):
     from journal import DBSession
     return DBSession
 
+
 @pytest.fixture(scope='function')
 def auth_req(request):
     manager = BCRYPTPasswordManager()
@@ -47,12 +48,10 @@ def auth_req(request):
     }
     testing.setUp(settings=settings)
     req = testing.DummyRequest()
-
     def cleanup():
         testing.tearDown()
 
     request.addfinalizer(cleanup)
-
     return req
 
 
@@ -151,6 +150,7 @@ def test_listing(app, entry):
         expected = getattr(entry, field, 'absent')
         assert expected in actual
 
+
 def test_post_to_add_view(app):
     entry_data = {
         'title': 'Hello there',
@@ -244,7 +244,3 @@ def test_home(app):
 
 def test_newpost(app):
     redirect = app.get('/newpost', status=200)
-
-
-
-
