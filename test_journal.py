@@ -48,6 +48,7 @@ def auth_req(request):
     }
     testing.setUp(settings=settings)
     req = testing.DummyRequest()
+
     def cleanup():
         testing.tearDown()
 
@@ -72,6 +73,41 @@ def entry(db_session):
     )
     db_session.flush()
     return entry
+
+
+def test_do_login_success(auth_req):
+    from journal import do_login
+    auth_req.params = {'username': 'admin', 'password': 'secret'}
+    assert do_login(auth_req)
+
+
+def test_do_login_bad_pass(auth_req):
+    from journal import do_login
+    auth_req.params = {'username': 'admin', 'password': 'wrong'}
+    assert not do_login(auth_req)
+
+
+def test_do_login_bad_user(auth_req):
+    from journal import do_login
+    auth_req.params = {'username': 'bad', 'password': 'secret'}
+    assert not do_login(auth_req)
+
+
+def test_do_login_missing_params(auth_req):
+    from journal import do_login
+    for params in ({'username': 'admin'}, {'password': 'secret'}):
+        auth_req.params = params
+        with pytest.raises(ValueError):
+            do_login(auth_req)
+
+
+def login_helper(username, password, app):
+    """encapsulate app login for reuse in tests
+
+    Accept all status codes so that we can make assertions in tests
+    """
+    login_data = {'username': username, 'password': password}
+    return app.post('/login', params=login_data, status='*')
 
 
 def test_write_entry(db_session):
@@ -151,72 +187,14 @@ def test_listing(app, entry):
         assert expected in actual
 
 
-def test_post_to_add_view(app):
-    entry_data = {
-        'title': 'Hello there',
-        'text': 'This is a post',
-    }
-    response = app.post('/add', params=entry_data, status='3*')
-    redirected = response.follow()
-    actual = redirected.body
-    for expected in entry_data.values():
-        assert expected in actual
-
-
-def test_add_no_params(app):
-    response = app.post('/add', status=500)
-    assert 'IntegrityError' in response.body
-
-
-def test_do_login_success(auth_req):
-    from journal import do_login
-    auth_req.params = {'username': 'admin', 'password': 'secret'}
-    assert do_login(auth_req)
-
-
-def test_do_login_bad_pass(auth_req):
-    from journal import do_login
-    auth_req.params = {'username': 'admin', 'password': 'wrong'}
-    assert not do_login(auth_req)
-
-
-def test_do_login_bad_user(auth_req):
-    from journal import do_login
-    auth_req.params = {'username': 'bad', 'password': 'secret'}
-    assert not do_login(auth_req)
-
-
-def test_do_login_missing_params(auth_req):
-    from journal import do_login
-    for params in ({'username': 'admin'}, {'password': 'secret'}):
-        auth_req.params = params
-        with pytest.raises(ValueError):
-            do_login(auth_req)
-
-
-def login_helper(username, password, app):
-    """encapsulate app login for reuse in tests
-
-    Accept all status codes so that we can make assertions in tests
-    """
-    login_data = {'username': username, 'password': password}
-    return app.post('/login', params=login_data, status='*')
-
-
-def test_start_as_anonymous(app):
-    response = app.get('/', status=200)
-    actual = response.body
-
-
 def test_login_success(app):
     redirect = app.get('/', status=200)
-    response = redirect.click(linkid = "login")
+    response = redirect.click(linkid="login")
     username, password = ('admin', 'secret')
     redirect = login_helper(username, password, app)
     assert redirect.status_code == 302
     response = redirect.follow()
     assert response.status_code == 200
-    actual = response.body
 
 
 def test_login_fails(app):
@@ -233,14 +211,79 @@ def test_logout(app):
     redirect = app.get('/logout', status="3*")
     response = redirect.follow()
     assert response.status_code == 200
-    actual = response.body
 
 
 def test_home(app):
     test_login_success(app)
     redirect = app.get('/', status=200)
-    response = redirect.click(linkid = "home")
+    response = redirect.click(linkid="home")
     assert response.status_code == 200
 
-def test_newpost(app):
-    redirect = app.get('/newpost', status=200)
+
+def test_post_logout(app):
+    entry_data = {
+        'title': 'Hello there',
+        'text': 'This is a post',
+    }
+    response = app.post('/add', params=entry_data, status='3*')
+    redirected = response.follow()
+    actual = redirected.body
+    for expected in entry_data.values():
+        assert 'No entries here so far' in actual
+
+
+def test_post_login(app, auth_req):
+    redirect = app.get('/', status=200)
+    response = redirect.click(linkid="login")
+    username, password = ('admin', 'secret')
+    redirect = login_helper(username, password, app)
+    assert redirect.status_code == 302
+    response = redirect.follow()
+    assert response.status_code == 200
+    entry_data = {
+        'title': 'Hello there',
+        'text': 'This is a post',
+    }
+    response = app.post('/add', params=entry_data, status='3*')
+    redirected = response.follow()
+    actual = redirected.body
+    for expected in entry_data.values():
+        assert expected in actual
+
+
+def test_post_markdown_nocode(app, auth_req):
+    redirect = app.get('/', status=200)
+    response = redirect.click(linkid="login")
+    username, password = ('admin', 'secret')
+    redirect = login_helper(username, password, app)
+    assert redirect.status_code == 302
+    response = redirect.follow()
+    assert response.status_code == 200
+    entry_data = {
+        'title': 'Hello there',
+        'text': 'This is a post'
+    }
+    response = app.post('/add', params=entry_data, status='3*')
+    redirected = response.follow()
+    actual = redirected.body
+    for expected in entry_data.values():
+        assert 'codehilite' not in actual
+
+
+def test_post_markdown_code(app, auth_req):
+    redirect = app.get('/', status=200)
+    response = redirect.click(linkid="login")
+    username, password = ('admin', 'secret')
+    redirect = login_helper(username, password, app)
+    assert redirect.status_code == 302
+    response = redirect.follow()
+    assert response.status_code == 200
+    entry_data = {
+        'title': 'Hello there',
+        'text': '    import OS'
+    }
+    response = app.post('/add', params=entry_data, status='3*')
+    redirected = response.follow()
+    actual = redirected.body
+    for expected in entry_data.values():
+        assert 'codehilite' in actual
