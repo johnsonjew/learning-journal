@@ -17,7 +17,7 @@ from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.security import remember, forget
 from cryptacular.bcrypt import BCRYPTPasswordManager
-
+from pyramid.httpexceptions import HTTPForbidden
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
@@ -119,6 +119,19 @@ def add_entry(request):
     return HTTPFound(request.route_url('home'))
 
 
+@view_config(route_name='edit_post', request_method='POST', xhr=True, renderer='json')
+def ajax_edit(request):
+    if request.authenticated_userid is not None:
+        title = request.params.get('title')
+        text = request.params.get('text')
+        eid = request.matchdict['id']
+        Entry.change(eid=eid, title=title, text=text)
+        return {"title": title, "text": Entry.one(eid).mark_down()}
+    else:
+        return HTTPForbidden("You're not allowed to change anything")
+
+
+
 @view_config(route_name='edit_post', request_method='POST')
 def edit_post(request):
     if request.authenticated_userid is not None:
@@ -218,5 +231,5 @@ def do_login(request):
 
 if __name__ == '__main__':
     app = main()
-    port = os.environ.get('PORT', 9093)
+    port = os.environ.get('PORT', 8101)
     serve(app, host='0.0.0.0', port=port)

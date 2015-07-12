@@ -1,5 +1,6 @@
 {% extends "base.jinja2" %}
 {% block body %}
+    <title>{{ entry.title }}</title>
     <div id="menu">
         <ul>
             <li><a href="{{ request.route_url('home') }}">Home</a></li>
@@ -11,15 +12,31 @@
             {% endif %}
         </ul>
     </div>
-<aside>
+<form id="jsform" style="display:none">
 
+  <div class="field">
+    <label for="title">Title: </label> <br>
+    <textarea name="title" id="title" rows="1" cols="80">{{entry.title}}</textarea>
+  </div>
+  <div class="field">
+    <label for="text">Text: {{ entry.Text }}</label> <br>
+    <textarea name="text" id="text" rows="15" cols="80">{{entry.text}}</textarea>
+  </div>
+  <div class="control_row">
+    <input id="edit_listing" type="submit" value="Share" name="Share"/>
+  </div>
+</form>
+
+<aside>
     <article class="entry" id="entry={{entryid}}">
         <p class="dateline">{{ entry.date.strftime('%b. %d, %Y') }}</p>
         <h3 class="title">Title: {{ entry.title }}</h3>
         <div class="entry_body">
             {{ entry.mark_down()|safe }}
         </div>
-        <div class="details"><a href="{{ request.route_url('edit', id=entry.id) }}">Edit</a></div>
+        <div class="details"><a id="edit_button" href="{{ request.route_url('edit', id=entry.id) }}">Edit</a></div>
     </article>
 </aside>
+<a href="https://twitter.com/share" class="twitter-share-button" data-via="shorjewken" data-size="large">Tweet</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
 {% endblock %}
