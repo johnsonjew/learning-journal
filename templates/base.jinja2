@@ -2,15 +2,16 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>Journal Home</title>
+        <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script src="/static/main.js"></script>
         <link href="/static/style.css" rel="stylesheet" type="text/css">
  </head>
  <body>
-    <h1>Dev-Accelerator Learning Journal</h1>
-    <main>
-                <section id="content">
+    <h1 id="jtitle">Dev-Accelerator Learning Journal</h1>
+        <main>
+            <section id="content">
                 {% block body %}{% endblock %}
-                </section>
-            </main>
+            </section>
+        </main>
  </body>
 </html>
